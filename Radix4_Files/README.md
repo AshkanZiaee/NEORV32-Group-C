@@ -1,38 +1,26 @@
-Repository Contents
-Compiled .sof files
-Precompiled FPGA bitstreams that can be directly programmed onto the target board.
+# Project Overview
 
-neorv32_cpu_cp_muldiv_r4booth.vhd
-Contains the working Radix-4 Booth multiplication algorithm implementation.
+This repository contains the implementation and testing of a **Radix-4 Booth multiplication algorithm** integrated into the NEORV32 architecture, alongside example test benches and FPGA top-level configuration.
 
-neorv32_cpu_cp_muldiv.vhd
-Provides the wrapper logic for initializing and connecting the Radix-4 Booth multiplication unit to the NEORV32 CPU core.
+---
 
-Example.c
-A sanity check test bench written in C verifying multiplication results.
+## Repository Contents
 
-Tests all four multiplication cases (signed × signed, unsigned × unsigned, signed × unsigned, unsigned × signed).
+| File Name                         | Description                                                                                           |
+|----------------------------------|-----------------------------------------------------------------------------------------------------|
+| Compiled .sof files              | Precompiled FPGA bitstreams ready for programming the target board.                                 |
+| neorv32_cpu_cp_muldiv_r4booth.vhd | Working Radix-4 Booth multiplication algorithm implementation.                                      |
+| neorv32_cpu_cp_muldiv.vhd        | Wrapper file for initializing and connecting the Radix-4 Booth multiplier to the NEORV32 CPU core. |
+| Example.c                       | Sanity check test bench to verify multiplication correctness in all 4 cases. All tests pass.       |
+| StressTestExample.c             | More comprehensive test bench with stress tests and performance measurement. Achieves 1.57× speedup. |
+| Top_Entity_File.vhd              | Top-level FPGA entity, including pin configuration, clock frequency, and integration details.      |
 
-All cases are passing successfully.
+---
 
-StressTestExample.c
-An extended test bench designed for stress testing and performance measurement.
+## Additional Information
 
-Achieves a measured speedup of 1.57× compared to baseline.
+- The design has been validated both in simulation and on hardware with cycle benchmark results confirming correctness and speed improvement.
 
-Top_Entity_File.vhd
-The top-level FPGA entity file, including:
+- This project serves as a reference for integrating efficient multiplication algorithms into RISC-V compatible cores.
 
-Pin mappings
-
-Clock frequency definition
-
-Integration with NEORV32 CPU core and the Radix-4 multiplier unit.
-
-Notes
-The Radix-4 Booth implementation has been successfully integrated and tested on hardware.
-
-LED-based cycle benchmarks confirm correctness and speedup improvements.
-
-This repository can serve both as a performance reference and as a template for further CPU co-processor enhancements.
 
