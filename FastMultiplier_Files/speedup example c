@@ -1,0 +1,57 @@
+#include <stdint.h>
+#include "neorv32.h"
+
+// Choose N so the run lasts ~0.5–3 s for easy timing by eye/phone
+#define N_ITERS  500000u
+
+static inline void wait_loops(uint32_t loops){
+  for(volatile uint32_t i=0;i<loops;i++){ __asm__ volatile ("nop"); }
+}
+static inline void led(uint8_t v){ neorv32_gpio_port_set(v); }
+
+// Software refs for quick authenticity
+static inline uint32_t ref_mul_lo(uint32_t a, uint32_t b){
+  return (uint32_t)((uint64_t)a * (uint64_t)b);
+}
+static inline uint32_t ref_mulh_su(int32_t a, uint32_t b){
+  uint64_t p = (uint64_t)((int64_t)a) * (uint64_t)b;
+  return (uint32_t)(p >> 32);
+}
+
+// MUL via .insn (R-type: OP=0x33, funct7=1)
+static inline uint32_t hw_mul(uint32_t a, uint32_t b){
+  uint32_t r; __asm__ volatile (".insn r 0x33, 0, 1, %0, %1, %2":"=r"(r):"r"(a),"r"(b)); return r;
+}
+static inline uint32_t hw_mulhsu(int32_t a, uint32_t b){
+  uint32_t r; __asm__ volatile (".insn r 0x33, 2, 1, %0, %1, %2":"=r"(r):"r"(a),"r"(b)); return r;
+}
+
+int main(void){
+  // READY cue (orientation)
+  led(0xAA); wait_loops(300000);
+  led(0x55); wait_loops(300000);
+  led(0x00); wait_loops(150000);
+
+  // Authenticity: two cases used in earlier tests
+  uint8_t err = 0;
+  if (hw_mul(7u,3u)   != ref_mul_lo(7u,3u))  err |= (1u<<1);
+  if (hw_mulhsu(-7,3u)!= ref_mulh_su(-7,3u)) err |= (1u<<3);
+  if (err){
+    while(1){ led(err); wait_loops(800000); led(0x00); wait_loops(400000); }
+  }
+
+  // START: constant code for timing start (record time at this change)
+  led(0xF0); // START pattern
+  // Immediately run exactly N multiplies
+  volatile uint32_t a=0x12345678u, b=0x87654321u, sink=0;
+  for(uint32_t i=0;i<N_ITERS;i++){
+    sink ^= hw_mul(a,b);
+    a = a * 1664525u + 1013904223u; // simple churn
+    b ^= a;
+  }
+  if (sink == 0xFFFFFFFFu){ led(0xFF); wait_loops(50000); } // anti-optim fence
+
+  // DONE: constant code for timing stop (record time at this change)
+  led(0x3C); // DONE pattern
+  while(1) { /* hold steady */ }
+}
